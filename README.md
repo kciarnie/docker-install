@@ -18,7 +18,7 @@ in order to uninstall docker
 ### Commands
 At the current moment, the list will be as shown
 
-```bash
+```
 hw                             Runs docker run hello-world
 install                        Installs docker
 restart                        restarts docker default instance
@@ -30,7 +30,7 @@ uninstall                      Uninstalls docker
 
 You can also run `./install.sh` in order to see a list of commands, the current commands are:
 
-```bash
+```
 Welcome to the Docker installation Script. Below are the following commands: 
 
 help			Help documentation, auto-generated with ## comments
@@ -49,7 +49,7 @@ Thus, invoking `make install` will install docker. The requirements for docker r
 
 If any edits are made to the `install.sh` file, please place the function in the following syntax in order to auto-generate `help`
 
-```bash
+```
 ## comments that will be on the left
 function someFunction() {
   blah... blah...
