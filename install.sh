@@ -22,20 +22,28 @@ BLUE="\033[36m"
 # The color WHITE (Used for printf)
 WHITE="\033[0m"
 
+# Begins with a function in the line
+FUNCTION_LINE="function "
+
 ## Help documentation, auto-generated with ## comments
 function help() {
     printf $BLUE"Welcome to the Docker installation Script. Below are the following commands: \n\n"$WHITE
     awk '/^##/{ 
         sub("## ", "", $0)
         getline functions;
-        sub("function ", "", functions)
-        sub("\\(\\) {", "", functions)
-        value=int(length(functions) / 8)
-        printf "'$BLUE'"functions"'$WHITE'"
-        for (i=0; i < 3-value; i++) { 
-            printf "\t" 
+        regex="function "
+        where = match(functions, regex)
+        if (where != 0) {
+            sub(regex, "", functions)
+            sub("\\(\\) {", "", functions)
+            value=int(length(functions) / 8)
+            printf "'$BLUE'"functions"'$WHITE'"
+            for (i=0; i < 3-value; i++) { 
+                printf "\t" 
+            }
+            printf $0 "\n"
         }
-        printf $0 "\n"
+
         }' $PROG |
     
     while read line; do
@@ -53,6 +61,7 @@ function hw() {
     fi
 }
 
+# Checks to see if docker is installed
 function docker_check() {
     if command_exists docker version; then
         echo "Docker is already installed."
@@ -63,6 +72,11 @@ function docker_check() {
 # Checks to see if the function exists
 function command_exists() {
     command -v "$@" >/dev/null 2>&1
+}
+
+# Adds the standardized semi-colon and space into the question and asks for an input
+function question_input() {
+    read -p "$@: "
 }
 
 ## Sets the environmental variable for docker-machine to default
@@ -76,7 +90,7 @@ function evaluate() {
 
 ## Installs docker
 function install() {
-    if command -v docker-machine version >/dev/null; then
+    if command_exists docker-machine version; then
         echo "Docker is installed"
     else
         install_brew
@@ -84,6 +98,7 @@ function install() {
     fi
 }
 
+# Brew commands in order to install docker, change permissions and start services
 function install_docker() {
     echo "Installing docker..."
 
@@ -100,8 +115,8 @@ function install_docker() {
 # Install homebrew (dependency installer)
 function install_brew() {
     echo "Checking to see if homebrew installed..."
-    if command -v brew --version >/dev/null; then
-        read -p "Would you like to update brew? [y/N]: "
+    if command_exists brew --version; then
+        question_input "Would you like to update brew? [y/N]"
         if [[ $REPLY =~ ^[Yy] ]]; then
             brew update
         fi
@@ -118,7 +133,7 @@ function restart() {
 ## Setup the default instances of docker
 function setup() {
     if [ -z "$1" ]; then
-        read -p "Please enter a container name? [default]: "
+        question_input "Please enter a container name? [default]"
         name=$REPLY
         if [ -z $REPLY ]; then
             name="default"
@@ -147,7 +162,7 @@ function stop() {
 
 ## Uninstalls docker
 function uninstall() {
-    if ! command -v docker-machine version >/dev/null; then
+    if ! command_exists docker-machine version; then
         echo "Docker is already uninstalled."
     else
         remove_docker
@@ -156,7 +171,7 @@ function uninstall() {
 
 # Removes docker
 function remove_docker() {
-    read -r -p "Are you sure you want to remove docker? [y/N]: "
+    question_input "Are you sure you want to remove docker? [y/N]"
 
     if [[ $REPLY =~ ^[Yy] ]]; then
         docker-machine stop default
@@ -169,9 +184,7 @@ function remove_docker() {
 }
 
 # Check if the function exists (bash specific)
-if [ -z $ARG1 ]; then
-    help
-elif [ $ARG1 = '-h' -o $ARG1 = '-H' -o $ARG1 = '--help' ]; then
+if [[ -z $ARG1 ]] || [ $ARG1 = '-h' -o $ARG1 = '-H' -o $ARG1 = '--help' ]; then
     help
 elif declare -f $ARG1 >/dev/null; then
     # call arguments verbatim
